@@ -1,0 +1,66 @@
+---
+- name: Install nodejs and npm
+  hosts: webserver
+  tasks:
+    - name: Update apt repo and cache
+      apt: 
+        update_cache: yes
+        force_apt_get: yes
+        cache_vaild_time: 3600
+      # Alternate way
+      # apt: update_cache=yes force_apt_get=yes cache_vaild_time=3600
+    - name: Install nodejs and npm
+      apt:
+        pkg:
+          - nodejs
+          - npm
+
+
+- name: Create new LinuX user for node app
+  hosts: webserver
+  taskes:
+    - name: Create Linux user
+      user:
+        name: nodejs_user
+        comment: User for nodejs app
+        group: admin
+
+
+- name: Deploy nodejs app
+  hosts: webserver
+  become: True
+  become_user: nodejs_user
+  tasks:
+    - name: Copy nodejs folder to the server
+      copy:
+        src: E:/User/mahashree/nodejs-app/nodejs-app-1.0.0.tgz
+        dest: /home/nodejs_user/app.1.0.0.tgz
+    - name: Unpack the nodejs file
+      unarchive:
+        src: /home/nodejs_user/app.1.0.0.tgz
+        dest: /home/nodejs_user/
+        remote_src: yes
+    # Alternate way
+    # - name: Unpack the nodejs file
+    #   unarchive:
+    #     src: E:/User/mahashree/nodejs-app/nodejs-app-1.0.0.tgz
+    #     dest: /home/nodejs_user/
+    - name: Install dependencies
+      npm:
+        path: /home/nodejs_user/package
+    - name: Start the application
+      command: node /home/nodejs_user/package/app/server
+      async: 1000
+      poll: 0
+    # Alternate way
+    # - name: Start the application
+    #   command: 
+    #     chdir: /home/nodejs_user/package/app
+    #     cmd: node server
+    #   async: 1000
+    #   poll: 0
+    - name: Ensure app is running
+      shell: ps aux | grep node
+      register: app_status
+    - debug: msg={{app_status.stdout_lines}}  
+
