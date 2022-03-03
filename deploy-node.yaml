@@ -18,10 +18,12 @@
 
 - name: Create new LinuX user for node app
   hosts: webserver
+  vars_files:
+    - project-vars
   taskes:
     - name: Create Linux user
       user:
-        name: nodejs_user
+        name: "{{linux_name}}"
         comment: User for nodejs app
         group: admin
 
@@ -29,33 +31,35 @@
 - name: Deploy nodejs app
   hosts: webserver
   become: True
-  become_user: nodejs_user
+  become_user: "{{linux_name}}"
+  vars_files:
+    - project-vars
   tasks:
     - name: Copy nodejs folder to the server
       copy:
-        src: E:/User/mahashree/nodejs-app/nodejs-app-1.0.0.tgz
-        dest: /home/nodejs_user/app.1.0.0.tgz
+        src: "{{location}}/nodejs-app-{{version}}.tgz"
+        dest: "{{user_home_dir}}/app.{{version}}.tgz"
     - name: Unpack the nodejs file
       unarchive:
-        src: /home/nodejs_user/app.1.0.0.tgz
-        dest: /home/nodejs_user/
+        src: "{{user_home_dir}}/app.{{version}}.tgz"
+        dest: "{{user_home_dir}}"
         remote_src: yes
     # Alternate way
     # - name: Unpack the nodejs file
     #   unarchive:
-    #     src: E:/User/mahashree/nodejs-app/nodejs-app-1.0.0.tgz
-    #     dest: /home/nodejs_user/
+    #     src: {"{location}}/nodejs-app-{{version}}.tgz"
+    #     dest: "{{user_home_dir}}"
     - name: Install dependencies
       npm:
-        path: /home/nodejs_user/package
+        path: "{{user_home_dir}}/package"
     - name: Start the application
-      command: node /home/nodejs_user/package/app/server
+      command: node {{user_home_dir}}/package/app/server
       async: 1000
       poll: 0
     # Alternate way
     # - name: Start the application
     #   command: 
-    #     chdir: /home/nodejs_user/package/app
+    #     chdir: "{{user_home_dir}}/package/app"
     #     cmd: node server
     #   async: 1000
     #   poll: 0
