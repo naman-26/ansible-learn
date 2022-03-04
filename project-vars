@@ -2,3 +2,5 @@ location: E:/User/mahashree/nodejs-app
 version: 1.0.0
 linux_name: nodejs_user
 user_home_dir: /home/{{linux_name}}
+
+docker_password: xxxx
