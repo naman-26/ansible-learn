@@ -1,0 +1,16 @@
+- name: Copy docker compose
+  copy:
+    src: docker-compose.yaml
+    dest: /home/naman/docker-compose.yaml
+
+- name: Docker login
+  community.docker.docker_login:
+    registry_url: "{{ docker_registry }}" 
+    username: "{{ docker_username }}"
+    password: "{{ docker_password }}"
+
+- name: Start container from compose
+  community.docker.docker_compose:
+    project_src: /home/naman
+    # Default state is present
+    # state: present # docker-compose up 

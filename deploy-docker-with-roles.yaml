@@ -1,0 +1,53 @@
+---
+- name: Install python3, docker, docker-compose
+  hosts: all
+  become: yes
+  become_user: root
+  gather_facts: False
+  tasks:
+    - name: Install python3 and docker
+      vars:
+        ansible_python_interpreter: /usr/bin/python
+      yum:
+        name: 
+          - python3
+          - docker
+        update_cache: yes
+        state: present
+    - name: Install docker-compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Linux-{{lookup('pipe', 'uname -m')}}
+        dest: /usr/local/bin/docker-compose
+        mode: +x   
+    - name: Start docker daemon
+      systemd:
+        name: docker
+        state: started 
+    - name: Install docker python module
+      pip:
+        name: 
+          - docker
+          - docker-compose
+
+- name: Create new linux user
+  hosts: all
+  become: yes
+  become_user: root
+  vars:
+    user_groups: adm,docker
+  roles:
+    - create_user
+  
+- name: Start docker containers
+  hosts: all
+  become: yes
+  become_user: naman
+  # Ask for password at prompt window
+  # vars_prompt:
+  #   - name: docker_password
+  #     prompt: Enter password for docker registry
+  vars_file:
+    - project-vars
+  roles:
+    - start_containers
+    
